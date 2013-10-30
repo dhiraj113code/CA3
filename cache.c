@@ -7,6 +7,7 @@
 
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 
 #include "cache.h"
@@ -83,6 +84,29 @@ void init_cache()
 
   /* initialize the cache, and cache statistics data structures */
 
+  //Unified Cache
+  //----------------------------------------------------------
+  unsigned n_blocks, block_offset, index_size;
+
+  c1.size = cache_usize;
+  c1.associativity = cache_assoc;
+  block_offset = LOG2(cache_block_size);
+  n_blocks = cache_usize/cache_block_size;
+  c1.n_sets = n_blocks/c1.associativity;
+  index_size = LOG2(c1.n_sets) + block_offset;
+  c1.index_mask = (1<<index_size) - 1;
+  c1.index_mask_offset = block_offset;
+
+  //Printing Initialized output
+  printf("-----------------------------------------------\n");
+  printf("number of blocks = %d\nnumber of sets = %d\nindex_size = %d\nMask = %d\nMask_offset = %d\n", n_blocks, c1.n_sets, index_size, c1.index_mask, c1.index_mask_offset);
+  printf("-----------------------------------------------\n");
+
+  //Dynamically allocating memory for LRU head, LRU tail and contents arrays
+  c1.LRU_head = (Pcache_line*)malloc(sizeof(Pcache_line)*c1.n_sets);
+  c1.LRU_tail = (Pcache_line*)malloc(sizeof(Pcache_line)*c1.n_sets);
+  c1.set_contents = (int*)malloc(sizeof(int)*c1.n_sets);
+  
 }
 /************************************************************/
 
