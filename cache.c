@@ -106,6 +106,14 @@ void init_cache()
   c1.LRU_head = (Pcache_line*)malloc(sizeof(Pcache_line)*c1.n_sets);
   c1.LRU_tail = (Pcache_line*)malloc(sizeof(Pcache_line)*c1.n_sets);
   c1.set_contents = (int*)malloc(sizeof(int)*c1.n_sets);
+
+  if(c1.LRU_head == NULL || c1.LRU_tail == NULL || c1.set_contents == NULL)
+     {printf("error : Memory allocation failed for LRU_head, LRU_tail\n"); exit(-1);}
+
+  //Initializing set_contents
+  int i;
+  for(i = 0; i < c1.n_sets; i++)
+     c1.set_contents[i] = 0;
   
 }
 /************************************************************/
@@ -115,6 +123,32 @@ void perform_access(unsigned addr, unsigned access_type)
 {
 
   /* handle an access to the cache */
+  //printf("address = %d, access_type = %d\n", addr, access_type);
+  int index_size = LOG2(c1.n_sets) + c1.index_mask_offset;
+
+  unsigned int index, tag;
+  
+  index = (addr & c1.index_mask) >> c1.index_mask_offset;
+  tag = addr >> index_size;
+  if(DEBUG) printf("debug_info : For addr = %d, tag = %d, index = %d\n", addr, tag, index);
+  UpAccessStats(access_type);
+  if(c1.LRU_head[index] == NULL) //Set is empty i.e. uninitialized yet
+  {
+     UpMissStats(access_type);
+     c1.LRU_head[index] = (Pcache_line)malloc(sizeof(cache_line));
+     c1.LRU_head[index]->tag = tag;
+
+     //What about write back and dirty bit     
+  }
+  else if(c1.LRU_head[index]->tag != tag)
+  {
+     UpMissStats(access_type);
+     c1.LRU_head[index]->tag = tag; 
+  }
+  //else a cache hit. Do nothing
+
+  //Printing the cache to have a look at hit
+  
 
 }
 /************************************************************/
@@ -209,3 +243,40 @@ void print_stats()
 	 cache_stat_data.copies_back);
 }
 /************************************************************/
+
+
+void UpMissStats(unsigned access_type)
+{
+switch(access_type)
+{
+   case DATA_LOAD_REFERENCE:
+   case DATA_STORE_REFERENCE:
+      cache_stat_data.misses++;
+      break;
+   case INSTRUCTION_LOAD_REFERENCE:
+      cache_stat_inst.misses++;
+      break;
+   defualt:
+      printf("error : Unrecognized access_type in Update miss stats\n");
+      exit(-1);
+     break;
+}
+}
+
+void UpAccessStats(unsigned access_type)
+{
+switch(access_type)
+{
+   case DATA_LOAD_REFERENCE:
+   case DATA_STORE_REFERENCE:
+      cache_stat_data.accesses++;
+      break;
+   case INSTRUCTION_LOAD_REFERENCE:
+      cache_stat_inst.accesses++;
+      break;
+   defualt:
+      printf("error : Unrecognized access_type in Update miss stats\n");
+      exit(-1);
+     break;
+}
+}

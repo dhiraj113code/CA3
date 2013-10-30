@@ -29,6 +29,12 @@
 #define CACHE_PARAM_WRITEALLOC 7
 #define CACHE_PARAM_NOWRITEALLOC 8
 
+#define DATA_LOAD_REFERENCE 0
+#define DATA_STORE_REFERENCE 1
+#define INSTRUCTION_LOAD_REFERENCE 2
+
+#define DEBUG FALSE
+
 
 /* structure definitions */
 typedef struct cache_line_ {
@@ -72,3 +78,6 @@ void print_stats();
 
 /* macros */
 #define LOG2(x) ((int)( log((double)(x)) / log(2) ))
+
+void UpMissStats(unsigned access_type);
+void UpAccessStats(unsigned access_type);
