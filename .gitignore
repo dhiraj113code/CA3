@@ -1,4 +1,4 @@
-.*trace
+*.trace
 *.o
 sim
 tags
