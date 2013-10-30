@@ -40,7 +40,7 @@ typedef struct cache_line_ {
 } cache_line, *Pcache_line;
 
 typedef struct cache_ {
-  int size;			/* cache size */
+  int size;			/* cache size in words*/
   int associativity;		/* cache associativity */
   int n_sets;			/* number of cache sets */
   unsigned index_mask;		/* mask to find cache index */
@@ -62,10 +62,10 @@ typedef struct cache_stat_ {
 /* function prototypes */
 void set_cache_param();
 void init_cache();
-void perform_access();
+void perform_access(unsigned, unsigned);
 void flush();
-void delete();
-void insert();
+void delete(Pcache_line *, Pcache_line *, Pcache_line);
+void insert(Pcache_line *, Pcache_line *, Pcache_line);
 void dump_settings();
 void print_stats();
 
