@@ -136,6 +136,7 @@ void perform_access(unsigned addr, unsigned access_type)
   if(c1.LRU_head[index] == NULL) //Miss with no Replacement
   {
      UpMissStats(access_type);
+     UpFetchStats(access_type);
      if(access_type == DATA_LOAD_REFERENCE || access_type == INSTRUCTION_LOAD_REFERENCE || cache_writealloc)
      {
         c1.LRU_head[index] = (Pcache_line)malloc(sizeof(cache_line));
@@ -143,16 +144,14 @@ void perform_access(unsigned addr, unsigned access_type)
         c1.LRU_head[index]->dirty = FALSE;
         if(access_type == DATA_STORE_REFERENCE && cache_writeback)
            c1.LRU_head[index]->dirty = TRUE;
-        if(access_type == DATA_LOAD_REFERENCE || access_type == INSTRUCTION_LOAD_REFERENCE)
-           UpFetchStats(access_type);
      }
   }
   else if(c1.LRU_head[index]->tag != tag) //Miss with Replacement
   {
      UpMissStats(access_type);
-
      if(access_type == DATA_LOAD_REFERENCE || access_type == INSTRUCTION_LOAD_REFERENCE || cache_writealloc)
      {
+        UpFetchStats(access_type);
         //While evicting
         UpReplaceStats(access_type);
 
@@ -165,9 +164,6 @@ void perform_access(unsigned addr, unsigned access_type)
         c1.LRU_head[index]->dirty = FALSE;
         if(access_type == DATA_STORE_REFERENCE && cache_writeback)
            c1.LRU_head[index]->dirty = TRUE;
-
-        if(access_type == DATA_LOAD_REFERENCE || access_type == INSTRUCTION_LOAD_REFERENCE)
-           UpFetchStats(access_type);
      }
   }
   else //Hit
@@ -344,6 +340,7 @@ switch(access_type)
       cache_stat_data.demand_fetches += cache_block_size/WORD_SIZE;
       break;
    case DATA_STORE_REFERENCE:
+      cache_stat_data.demand_fetches += cache_block_size/WORD_SIZE;
       break;
    case INSTRUCTION_LOAD_REFERENCE:
       cache_stat_inst.demand_fetches += cache_block_size/WORD_SIZE;
