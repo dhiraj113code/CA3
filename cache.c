@@ -161,6 +161,7 @@ void perform_access(unsigned addr, unsigned access_type)
 /* handle an access to the cache */
 int index_size;
 unsigned int index, tag;
+Pcache_line c_line;
 if(cache_split && access_type == INSTRUCTION_LOAD_REFERENCE) //Only Loads
 {
    index_size = LOG2(c2.n_sets) + c2.index_mask_offset;
@@ -171,27 +172,33 @@ if(cache_split && access_type == INSTRUCTION_LOAD_REFERENCE) //Only Loads
    if(c2.LRU_head[index] == NULL) //Miss with no Replacement
    {
       UpMissStats(access_type);
-      UpFetchStats(access_type);
+      cache_stat_data.demand_fetches += cache_block_size/WORD_SIZE; //Memory Fetch
       c2.LRU_head[index] = (Pcache_line)malloc(sizeof(cache_line));
       c2.LRU_head[index]->tag = tag;
       c2.LRU_head[index]->dirty = FALSE;
       c2.LRU_head[index]->LRU_next = (Pcache_line)NULL;
       c2.LRU_head[index]->LRU_prev = (Pcache_line)NULL;
       c2.set_contents[index] = 1;
+      c2.LRU_tail[index] = c2.LRU_head[index]; //When only one element is present both head and tail point to it
    }
    else if(!search(c2.LRU_head[index], tag)) //Miss with Replacement
    {
       UpMissStats(access_type);
-      UpFetchStats(access_type);
+      cache_stat_data.demand_fetches += cache_block_size/WORD_SIZE; //Memory Fetch
   
       if(c2.set_contents[index] < c2.associativity)
       {
-        //insert
+        c_line = (Pcache_line)malloc(sizeof(cache_line));
+        c_line->tag = tag;
+        c_line->dirty = FALSE;
+        //insert(&c2.LRU_head[index], &c2.LRU_tail[index], c_line);
+        c2.set_contents[index]++; 
       }
       else
       {
+         //insert(&c2.LRU_head[index], &c2.LRU_tail[index], c_line);
+         //delete(&c2.LRU_head[index], &c2.LRU_tail[index], c2.LRU_tail[index]);
          //While evicting
-         //delete and insert
          cache_stat_inst.replacements++;
       }
 
@@ -213,7 +220,7 @@ else
   if(c1.LRU_head[index] == NULL) //Miss with no Replacement
   {
      UpMissStats(access_type);
-     UpFetchStats(access_type);
+     cache_stat_data.demand_fetches += cache_block_size/WORD_SIZE; //Memory fetch
      if(access_type == DATA_LOAD_REFERENCE || access_type == INSTRUCTION_LOAD_REFERENCE || cache_writealloc)
      {
         c1.LRU_head[index] = (Pcache_line)malloc(sizeof(cache_line));
@@ -228,7 +235,7 @@ else
      UpMissStats(access_type);
      if(access_type == DATA_LOAD_REFERENCE || access_type == INSTRUCTION_LOAD_REFERENCE || cache_writealloc)
      {
-        UpFetchStats(access_type);
+        cache_stat_data.demand_fetches += cache_block_size/WORD_SIZE; //Memory fetch
         //While evicting
         UpReplaceStats(access_type);
 
@@ -409,27 +416,6 @@ switch(access_type)
      break;
 }
 }
-
-void UpFetchStats(unsigned access_type)
-{
-switch(access_type)
-{
-   case DATA_LOAD_REFERENCE:
-      cache_stat_data.demand_fetches += cache_block_size/WORD_SIZE;
-      break;
-   case DATA_STORE_REFERENCE:
-      cache_stat_data.demand_fetches += cache_block_size/WORD_SIZE;
-      break;
-   case INSTRUCTION_LOAD_REFERENCE:
-      cache_stat_inst.demand_fetches += cache_block_size/WORD_SIZE;
-      break;
-   defualt:
-      printf("error : Unrecognized access_type in update fetch stats\n");
-      exit(-1);
-     break;
-}
-}
-
 
 //Search whether tag is present in the double linked list cache line c
 int search(Pcache_line c, unsigned tag)

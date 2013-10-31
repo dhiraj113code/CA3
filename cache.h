@@ -83,5 +83,4 @@ void print_stats();
 void UpMissStats(unsigned access_type);
 void UpAccessStats(unsigned access_type);
 void UpReplaceStats(unsigned access_type);
-void UpFetchStats(unsigned access_type);
 int search(Pcache_line c, unsigned tag);
