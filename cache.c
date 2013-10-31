@@ -175,13 +175,25 @@ if(cache_split && access_type == INSTRUCTION_LOAD_REFERENCE) //Only Loads
       c2.LRU_head[index] = (Pcache_line)malloc(sizeof(cache_line));
       c2.LRU_head[index]->tag = tag;
       c2.LRU_head[index]->dirty = FALSE;
+      c2.LRU_head[index]->LRU_next = (Pcache_line)NULL;
+      c2.LRU_head[index]->LRU_prev = (Pcache_line)NULL;
+      c2.set_contents[index] = 1;
    }
-   else if(c2.LRU_head[index]->tag != tag) //Miss with Replacement
+   else if(!search(c2.LRU_head[index], tag)) //Miss with Replacement
    {
       UpMissStats(access_type);
       UpFetchStats(access_type);
-      //While evicting
-      UpReplaceStats(access_type);
+  
+      if(c2.set_contents[index] < c2.associativity)
+      {
+        //insert
+      }
+      else
+      {
+         //While evicting
+         //delete and insert
+         cache_stat_inst.replacements++;
+      }
 
       //Settting the new tag
       c2.LRU_head[index]->tag = tag;
@@ -416,4 +428,24 @@ switch(access_type)
       exit(-1);
      break;
 }
+}
+
+
+//Search whether tag is present in the double linked list cache line c
+int search(Pcache_line c, unsigned tag)
+{
+   if(c == NULL)
+   {
+      printf("error : Searching an unintialized cache line\n");
+      exit(-1);
+   }
+   else
+   {
+     do
+     {
+        if(c->tag == tag)
+           return TRUE; 
+     } while(c->LRU_next != NULL);
+     return FALSE;
+   }
 }
