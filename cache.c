@@ -88,18 +88,43 @@ void init_cache()
   //----------------------------------------------------------
   unsigned n_blocks, block_offset, index_size;
 
-  c1.size = cache_usize;
-  c1.associativity = cache_assoc;
   block_offset = LOG2(cache_block_size);
-  n_blocks = cache_usize/cache_block_size;
-  c1.n_sets = n_blocks/c1.associativity;
-  index_size = LOG2(c1.n_sets) + block_offset;
-  c1.index_mask = (1<<index_size) - 1;
-  c1.index_mask_offset = block_offset;
+  if(!cache_split)
+  {
+     //Unified Cache
+     c1.size = cache_usize;
+     c1.associativity = cache_assoc;
+     n_blocks = cache_usize/cache_block_size;
+     c1.n_sets = n_blocks/c1.associativity;
+     index_size = LOG2(c1.n_sets) + block_offset;
+     c1.index_mask = (1<<index_size) - 1;
+     c1.index_mask_offset = block_offset;
+  }
+  else
+  {
+     //Data Cache
+     c1.size = cache_dsize;
+     c1.associativity = cache_assoc;
+     n_blocks = cache_dsize/cache_block_size;
+     c1.n_sets = n_blocks/c1.associativity;
+     index_size = LOG2(c1.n_sets) + block_offset;
+     c1.index_mask = (1<<index_size) - 1;
+     c1.index_mask_offset = block_offset;
+
+     //Instruction Cache
+     c2.size = cache_isize;
+     c2.associativity = cache_assoc;
+     n_blocks = cache_isize/cache_block_size;
+     c2.n_sets = n_blocks/c2.associativity;
+     index_size = LOG2(c2.n_sets) + block_offset;
+     c2.index_mask = (1<<index_size) - 1;
+     c2.index_mask_offset = block_offset;
+  }
 
   //Printing Initialized output
   printf("-----------------------------------------------\n");
-  printf("number of blocks = %d\nnumber of sets = %d\nindex_size = %d\nMask = %d\nMask_offset = %d\n", n_blocks, c1.n_sets, index_size, c1.index_mask, c1.index_mask_offset);
+  printf("Cache 1:\number of sets = %d\nindex_size = %d\nMask = %d\nMask_offset = %d\n", c1.n_sets, index_size, c1.index_mask, c1.index_mask_offset);
+  printf("Cache 2:\nnumber of sets = %d\nindex_size = %d\nMask = %d\nMask_offset = %d\n", c2.n_sets, index_size, c2.index_mask, c2.index_mask_offset);
   printf("-----------------------------------------------\n");
 
   //Dynamically allocating memory for LRU head, LRU tail and contents arrays
@@ -107,13 +132,24 @@ void init_cache()
   c1.LRU_tail = (Pcache_line*)malloc(sizeof(Pcache_line)*c1.n_sets);
   c1.set_contents = (int*)malloc(sizeof(int)*c1.n_sets);
 
+  if(cache_split)
+  {
+     c2.LRU_head = (Pcache_line*)malloc(sizeof(Pcache_line)*c2.n_sets);
+     c2.LRU_tail = (Pcache_line*)malloc(sizeof(Pcache_line)*c2.n_sets);
+     c2.set_contents = (int*)malloc(sizeof(int)*c2.n_sets);
+  }
+
   if(c1.LRU_head == NULL || c1.LRU_tail == NULL || c1.set_contents == NULL)
-     {printf("error : Memory allocation failed for LRU_head, LRU_tail\n"); exit(-1);}
+     {printf("error : Memory allocation failed for C1 LRU_head, LRU_tail\n"); exit(-1);}
+  if(c2.LRU_head == NULL || c2.LRU_tail == NULL || c2.set_contents == NULL)
+     {printf("error : Memory allocation failed for C2 LRU_head, LRU_tail\n"); exit(-1);}
 
   //Initializing set_contents
   int i;
   for(i = 0; i < c1.n_sets; i++)
      c1.set_contents[i] = 0;
+  for(i = 0; i < c2.n_sets; i++)
+     c2.set_contents[i] = 0;
   
 }
 /************************************************************/
@@ -122,11 +158,40 @@ void init_cache()
 void perform_access(unsigned addr, unsigned access_type)
 {
 
-  /* handle an access to the cache */
-  int index_size = LOG2(c1.n_sets) + c1.index_mask_offset;
+/* handle an access to the cache */
+int index_size;
+unsigned int index, tag;
+if(cache_split && access_type == INSTRUCTION_LOAD_REFERENCE) //Only Loads
+{
+   index_size = LOG2(c2.n_sets) + c2.index_mask_offset;
+   index = (addr & c2.index_mask) >> c2.index_mask_offset;
+   tag = addr >> index_size;
 
-  unsigned int index, tag;
-  
+   UpAccessStats(access_type);
+   if(c2.LRU_head[index] == NULL) //Miss with no Replacement
+   {
+      UpMissStats(access_type);
+      UpFetchStats(access_type);
+      c2.LRU_head[index] = (Pcache_line)malloc(sizeof(cache_line));
+      c2.LRU_head[index]->tag = tag;
+      c2.LRU_head[index]->dirty = FALSE;
+   }
+   else if(c2.LRU_head[index]->tag != tag) //Miss with Replacement
+   {
+      UpMissStats(access_type);
+      UpFetchStats(access_type);
+      //While evicting
+      UpReplaceStats(access_type);
+
+      //Settting the new tag
+      c2.LRU_head[index]->tag = tag;
+      c2.LRU_head[index]->dirty = FALSE;
+   }
+   //Else do nothing on a write hit
+}
+else
+{
+  index_size = LOG2(c1.n_sets) + c1.index_mask_offset;
   index = (addr & c1.index_mask) >> c1.index_mask_offset;
   tag = addr >> index_size;
 
@@ -171,6 +236,7 @@ void perform_access(unsigned addr, unsigned access_type)
      if(access_type == DATA_STORE_REFERENCE && cache_writeback)
         c1.LRU_head[index]->dirty = TRUE; 
   }
+}
 }
 /************************************************************/
 
