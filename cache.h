@@ -62,6 +62,7 @@ typedef struct cache_stat_ {
   int replacements;		/* number of misses that cause replacments */
   int demand_fetches;		/* number of fetches */
   int copies_back;		/* number of write backs */
+  int write_backs;
 } cache_stat, *Pcache_stat;
 
 
@@ -81,3 +82,5 @@ void print_stats();
 
 void UpMissStats(unsigned access_type);
 void UpAccessStats(unsigned access_type);
+void UpReplaceStats(unsigned access_type);
+void UpFetchStats(unsigned access_type);

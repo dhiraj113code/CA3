@@ -123,43 +123,76 @@ void perform_access(unsigned addr, unsigned access_type)
 {
 
   /* handle an access to the cache */
-  //printf("address = %d, access_type = %d\n", addr, access_type);
   int index_size = LOG2(c1.n_sets) + c1.index_mask_offset;
 
   unsigned int index, tag;
   
   index = (addr & c1.index_mask) >> c1.index_mask_offset;
   tag = addr >> index_size;
+
   if(DEBUG) printf("debug_info : For addr = %d, tag = %d, index = %d\n", addr, tag, index);
+
   UpAccessStats(access_type);
-  if(c1.LRU_head[index] == NULL) //Set is empty i.e. uninitialized yet
+  if(c1.LRU_head[index] == NULL) //Miss with no Replacement
   {
      UpMissStats(access_type);
-     c1.LRU_head[index] = (Pcache_line)malloc(sizeof(cache_line));
-     c1.LRU_head[index]->tag = tag;
-
-     //What about write back and dirty bit     
+     if(access_type == DATA_LOAD_REFERENCE || access_type == INSTRUCTION_LOAD_REFERENCE || cache_writealloc)
+     {
+        c1.LRU_head[index] = (Pcache_line)malloc(sizeof(cache_line));
+        c1.LRU_head[index]->tag = tag;
+        c1.LRU_head[index]->dirty = FALSE;
+        if(access_type == DATA_STORE_REFERENCE && cache_writeback)
+           c1.LRU_head[index]->dirty = TRUE;
+        if(access_type == DATA_LOAD_REFERENCE || access_type == INSTRUCTION_LOAD_REFERENCE)
+           UpFetchStats(access_type);
+     }
   }
-  else if(c1.LRU_head[index]->tag != tag)
+  else if(c1.LRU_head[index]->tag != tag) //Miss with Replacement
   {
      UpMissStats(access_type);
-     c1.LRU_head[index]->tag = tag; 
+
+     if(access_type == DATA_LOAD_REFERENCE || access_type == INSTRUCTION_LOAD_REFERENCE || cache_writealloc)
+     {
+        //While evicting
+        UpReplaceStats(access_type);
+
+        //If dirty
+        if(c1.LRU_head[index]->dirty)
+           cache_stat_data.copies_back += cache_block_size/WORD_SIZE; 
+
+        //Settting the new tag
+        c1.LRU_head[index]->tag = tag;
+        c1.LRU_head[index]->dirty = FALSE;
+        if(access_type == DATA_STORE_REFERENCE && cache_writeback)
+           c1.LRU_head[index]->dirty = TRUE;
+
+        if(access_type == DATA_LOAD_REFERENCE || access_type == INSTRUCTION_LOAD_REFERENCE)
+           UpFetchStats(access_type);
+     }
   }
-  //else a cache hit. Do nothing
-
-  //Printing the cache to have a look at hit
-  
-
+  else //Hit
+  {
+     if(access_type == DATA_STORE_REFERENCE && cache_writeback)
+        c1.LRU_head[index]->dirty = TRUE; 
+  }
 }
 /************************************************************/
 
 /************************************************************/
 void flush()
 {
-
   /* flush the cache */
-
+  int i;
+  for(i = 0; i < c1.n_sets; i++)
+  {
+     if(c1.LRU_head[i] != NULL)
+     {
+        if(c1.LRU_head[i]->dirty)
+           cache_stat_data.copies_back += cache_block_size/WORD_SIZE;
+     }
+  }
 }
+
 /************************************************************/
 
 /************************************************************/
@@ -241,6 +274,7 @@ void print_stats()
 	 cache_stat_data.demand_fetches);
   printf("  copies back:   %d\n", cache_stat_inst.copies_back +
 	 cache_stat_data.copies_back);
+  printf(" Store instructions = %d\n", cache_stat_data.write_backs);
 }
 /************************************************************/
 
@@ -268,14 +302,54 @@ void UpAccessStats(unsigned access_type)
 switch(access_type)
 {
    case DATA_LOAD_REFERENCE:
+      cache_stat_data.accesses++;
+      break;
    case DATA_STORE_REFERENCE:
       cache_stat_data.accesses++;
+      cache_stat_data.write_backs++;
       break;
    case INSTRUCTION_LOAD_REFERENCE:
       cache_stat_inst.accesses++;
       break;
    defualt:
       printf("error : Unrecognized access_type in Update miss stats\n");
+      exit(-1);
+     break;
+}
+}
+
+void UpReplaceStats(unsigned access_type)
+{
+switch(access_type)
+{
+   case DATA_LOAD_REFERENCE:
+   case DATA_STORE_REFERENCE:
+      cache_stat_data.replacements++;
+      break;
+   case INSTRUCTION_LOAD_REFERENCE:
+      cache_stat_inst.replacements++;
+      break;
+   defualt:
+      printf("error : Unrecognized access_type in Update miss stats\n");
+      exit(-1);
+     break;
+}
+}
+
+void UpFetchStats(unsigned access_type)
+{
+switch(access_type)
+{
+   case DATA_LOAD_REFERENCE:
+      cache_stat_data.demand_fetches += cache_block_size/WORD_SIZE;
+      break;
+   case DATA_STORE_REFERENCE:
+      break;
+   case INSTRUCTION_LOAD_REFERENCE:
+      cache_stat_inst.demand_fetches += cache_block_size/WORD_SIZE;
+      break;
+   defualt:
+      printf("error : Unrecognized access_type in update fetch stats\n");
       exit(-1);
      break;
 }
