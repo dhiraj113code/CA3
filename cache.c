@@ -216,17 +216,35 @@ else
   if(DEBUG) printf("debug_info : For addr = %d, tag = %d, index = %d\n", addr, tag, index);
 
   UpAccessStats(access_type);
+
+  //Create the cache line to be inserted
+   if(access_type == DATA_LOAD_REFERENCE || access_type == INSTRUCTION_LOAD_REFERENCE || cache_writealloc)
+   {
+      c_line = (Pcache_line)malloc(sizeof(cache_line));
+      c_line->tag = tag;
+      c_line->dirty = FALSE;
+      c_line->LRU_next = (Pcache_line)NULL;
+      c_line->LRU_prev = (Pcache_line)NULL;
+      if(access_type == DATA_STORE_REFERENCE) //For a write instruction
+      {
+         if(cache_writeback) //If writeback
+            c1.LRU_head[index]->dirty = TRUE;
+         else //If writethrough
+            cache_stat_data.copies_back += cache_block_size/WORD_SIZE; 
+      }
+   }
+   else
+   {
+      cache_stat_data.copies_back += cache_block_size/WORD_SIZE; //write no alloc and DATA_STORE_REFERENCE
+   }
+
   if(c1.LRU_head[index] == NULL) //Miss with no Replacement
   {
      UpMissStats(access_type);
      cache_stat_data.demand_fetches += cache_block_size/WORD_SIZE; //Memory fetch
      if(access_type == DATA_LOAD_REFERENCE || access_type == INSTRUCTION_LOAD_REFERENCE || cache_writealloc)
      {
-        c1.LRU_head[index] = (Pcache_line)malloc(sizeof(cache_line));
-        c1.LRU_head[index]->tag = tag;
-        c1.LRU_head[index]->dirty = FALSE;
-        if(access_type == DATA_STORE_REFERENCE && cache_writeback)
-           c1.LRU_head[index]->dirty = TRUE;
+        c1.LRU_head[index] = c_line;
      }
   }
   else if(c1.LRU_head[index]->tag != tag) //Miss with Replacement
@@ -241,18 +259,7 @@ else
         //If dirty
         if(c1.LRU_head[index]->dirty)
            cache_stat_data.copies_back += cache_block_size/WORD_SIZE; 
-
-        //Settting the new tag
-        c1.LRU_head[index]->tag = tag;
-        c1.LRU_head[index]->dirty = FALSE;
-        if(access_type == DATA_STORE_REFERENCE && cache_writeback)
-           c1.LRU_head[index]->dirty = TRUE;
      }
-  }
-  else //Hit
-  {
-     if(access_type == DATA_STORE_REFERENCE && cache_writeback)
-        c1.LRU_head[index]->dirty = TRUE; 
   }
 }
 }
