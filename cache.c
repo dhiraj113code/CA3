@@ -182,6 +182,7 @@ if(cache_split && access_type == INSTRUCTION_LOAD_REFERENCE) //Instruction Loads
       c2.set_contents[index] = 1;
    }
    else if(!search(c2.LRU_head[index], tag, &hitAt)) //Miss with Replacement
+   //else if(!search2(c2.LRU_head[index], c2.LRU_tail[index], tag, &hitAt))
    {
       UpMissStats(access_type);
       cache_stat_data.demand_fetches += cache_block_size/WORD_SIZE; //Memory Fetch
@@ -227,6 +228,7 @@ else
      //else write no allocate cache and DATA_STORE REFERENCE
   }
   else if(!search(c1.LRU_head[index], tag, &hitAt)) //Miss with Replacement
+  //else if(!search2(c1.LRU_head[index], c1.LRU_tail[index], tag, &hitAt))
   {
      UpMissStats(access_type);
      if(access_type == DATA_LOAD_REFERENCE || access_type == INSTRUCTION_LOAD_REFERENCE || cache_writealloc)
@@ -467,6 +469,37 @@ int search(Pcache_line c, unsigned tag, Pcache_line *hitAt)
             }
             c = n;
          }
+      }
+      return FALSE;
+   }
+}
+
+
+int search2(Pcache_line head, Pcache_line tail, unsigned tag, Pcache_line *hitAt)
+{
+   Pcache_line c_line, n_line;
+   if(head == NULL || tail == NULL)
+   {
+      printf("error : Search2 head or tail is not NULL\n");
+      exit(-1);
+   }
+   else
+   {
+      *hitAt = (Pcache_line)NULL;
+      c_line = head;
+      while(TRUE)
+      {
+         if(c_line->tag == tag)
+         {
+            *hitAt = c_line;
+            return TRUE;
+         }
+         else
+         {
+            n_line = c_line;
+            c_line = n_line->LRU_next;
+         }
+         if(c_line == tail) break;
       }
       return FALSE;
    }
