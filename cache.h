@@ -84,3 +84,4 @@ void UpMissStats(unsigned access_type);
 void UpAccessStats(unsigned access_type);
 void UpReplaceStats(unsigned access_type);
 int search(Pcache_line c, unsigned tag);
+Pcache_line allocateCL(unsigned tag);

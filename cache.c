@@ -172,11 +172,7 @@ if(cache_split && access_type == INSTRUCTION_LOAD_REFERENCE) //Only Loads
    UpAccessStats(access_type);
 
    //Create the cache line to be inserted
-   c_line = (Pcache_line)malloc(sizeof(cache_line));
-   c_line->tag = tag;
-   c_line->dirty = FALSE;
-   c_line->LRU_next = (Pcache_line)NULL;
-   c_line->LRU_prev = (Pcache_line)NULL;
+   c_line = allocateCL(tag);
 
    if(c2.LRU_head[index] == NULL) //Miss with no Replacement
    {
@@ -449,4 +445,17 @@ int search(Pcache_line c, unsigned tag)
       }
       return FALSE;
    }
+}
+
+//Allocate cache line
+
+Pcache_line allocateCL(unsigned tag)
+{
+   Pcache_line c_line;
+   c_line = (Pcache_line)malloc(sizeof(cache_line));
+   c_line->tag = tag;
+   c_line->dirty = FALSE;
+   c_line->LRU_next = (Pcache_line)NULL;
+   c_line->LRU_prev = (Pcache_line)NULL;
+   return c_line;
 }
