@@ -441,6 +441,7 @@ switch(access_type)
 //Search whether tag is present in the double linked list cache line c
 int search(Pcache_line c, unsigned tag, Pcache_line *hitAt)
 {
+   Pcache_line n;
    if(c == NULL)
    {
       printf("error : Searching an unintialized cache line\n");
@@ -458,12 +459,13 @@ int search(Pcache_line c, unsigned tag, Pcache_line *hitAt)
       { 
          while(c->LRU_next != NULL)
          {
-            if(c->tag == tag)
+            n = c->LRU_next;
+            if(n->tag == tag)
             {
-               *hitAt = c;
+               *hitAt = n;
                return TRUE;
             }
-            c = c->LRU_next;
+            c = n;
          }
       }
       return FALSE;
