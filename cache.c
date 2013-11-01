@@ -162,7 +162,7 @@ void perform_access(unsigned addr, unsigned access_type)
 /* handle an access to the cache */
 int index_size;
 unsigned int index, tag;
-Pcache_line c_line;
+Pcache_line c_line, hitAt;
 if(cache_split && access_type == INSTRUCTION_LOAD_REFERENCE) //Only Loads
 {
    index_size = LOG2(c2.n_sets) + c2.index_mask_offset;
@@ -182,7 +182,7 @@ if(cache_split && access_type == INSTRUCTION_LOAD_REFERENCE) //Only Loads
       c2.LRU_tail[index] = c_line; //When only one element is present both head and tail point to it
       c2.set_contents[index] = 1;
    }
-   else if(!search(c2.LRU_head[index], tag)) //Miss with Replacement
+   else if(!search(c2.LRU_head[index], tag, &hitAt)) //Miss with Replacement
    {
       UpMissStats(access_type);
       cache_stat_data.demand_fetches += cache_block_size/WORD_SIZE; //Memory Fetch
@@ -219,35 +219,48 @@ else
      cache_stat_data.demand_fetches += cache_block_size/WORD_SIZE; //Memory fetch
      if(access_type == DATA_LOAD_REFERENCE || access_type == INSTRUCTION_LOAD_REFERENCE || cache_writealloc)
      {
-        c1.LRU_head[index] = allocateCL(tag);
+        c_line = allocateCL(tag);
+        c1.LRU_head[index] = c_line;
+        c1.LRU_tail[index] = c_line;
         if(access_type == DATA_STORE_REFERENCE && cache_writeback)
            c1.LRU_head[index]->dirty = TRUE;
+        c1.set_contents[index] = 1;
      }
   }
-  else if(c1.LRU_head[index]->tag != tag) //Miss with Replacement
+  else if(!search(c1.LRU_head[index], tag, &hitAt)) //Miss with Replacement
   {
      UpMissStats(access_type);
      if(access_type == DATA_LOAD_REFERENCE || access_type == INSTRUCTION_LOAD_REFERENCE || cache_writealloc)
      {
         cache_stat_data.demand_fetches += cache_block_size/WORD_SIZE; //Memory fetch
-        //While evicting
-        UpReplaceStats(access_type);
 
-        //If dirty
-        if(c1.LRU_head[index]->dirty)
-           cache_stat_data.copies_back += cache_block_size/WORD_SIZE;
-
-        //Settting the new tag
-        c1.LRU_head[index]->tag = tag;
-        c1.LRU_head[index]->dirty = FALSE;
+        //Creating the cache_line to be inserted
+        c_line = allocateCL(tag);
         if(access_type == DATA_STORE_REFERENCE && cache_writeback)
-           c1.LRU_head[index]->dirty = TRUE;
+           c_line->dirty = TRUE;
+
+        if(c1.set_contents[index] < c1.associativity)
+        {
+           //Inserting the cache line
+           insert(&c1.LRU_head[index], &c1.LRU_tail[index], c_line);
+           c1.set_contents[index]++;
+        }
+        else //While evicting
+        {
+           UpReplaceStats(access_type);
+           //If dirty
+           if(c1.LRU_tail[index]->dirty)
+              cache_stat_data.copies_back += cache_block_size/WORD_SIZE;
+
+           delete(&c1.LRU_head[index], &c1.LRU_tail[index], c1.LRU_tail[index]);
+           insert(&c1.LRU_head[index], &c1.LRU_tail[index], c_line);
+        }
      }
   }
   else //Hit
   {
      if(access_type == DATA_STORE_REFERENCE && cache_writeback)
-        c1.LRU_head[index]->dirty = TRUE; 
+        hitAt->dirty = TRUE; 
   }
 }
 }
@@ -258,12 +271,23 @@ void flush()
 {
   /* flush the cache */
   int i;
+  Pcache_line c_line, n_line;
+  //Only flushing c1 is sufficient as IC is never dirty
   for(i = 0; i < c1.n_sets; i++)
   {
-     if(c1.LRU_head[i] != NULL)
+     c_line = c1.LRU_head[i]; 
+     if(c_line != NULL)
      {
-        if(c1.LRU_head[i]->dirty)
+        if(c_line->dirty)
            cache_stat_data.copies_back += cache_block_size/WORD_SIZE;
+        while(c_line->LRU_next != NULL)
+        {
+           n_line = c_line->LRU_next;
+           if(n_line->dirty)
+              cache_stat_data.copies_back += cache_block_size/WORD_SIZE;
+           c_line = n_line;
+        
+        }
      }
   }
 }
@@ -415,7 +439,7 @@ switch(access_type)
 }
 
 //Search whether tag is present in the double linked list cache line c
-int search(Pcache_line c, unsigned tag)
+int search(Pcache_line c, unsigned tag, Pcache_line *hitAt)
 {
    if(c == NULL)
    {
@@ -424,14 +448,21 @@ int search(Pcache_line c, unsigned tag)
    }
    else
    {
+      *hitAt = (Pcache_line)NULL;
       if(c->tag == tag)
+      {
+         *hitAt = c;
          return TRUE;
+      }
       else
       { 
          while(c->LRU_next != NULL)
          {
             if(c->tag == tag)
+            {
+               *hitAt = c;
                return TRUE;
+            }
             c = c->LRU_next;
          }
       }
