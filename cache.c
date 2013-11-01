@@ -141,7 +141,8 @@ void init_cache()
 
   if(c1.LRU_head == NULL || c1.LRU_tail == NULL || c1.set_contents == NULL)
      {printf("error : Memory allocation failed for C1 LRU_head, LRU_tail\n"); exit(-1);}
-  if(c2.LRU_head == NULL || c2.LRU_tail == NULL || c2.set_contents == NULL)
+
+  if(cache_split) if(c2.LRU_head == NULL || c2.LRU_tail == NULL || c2.set_contents == NULL)
      {printf("error : Memory allocation failed for C2 LRU_head, LRU_tail\n"); exit(-1);}
 
   //Initializing set_contents
@@ -169,17 +170,21 @@ if(cache_split && access_type == INSTRUCTION_LOAD_REFERENCE) //Only Loads
    tag = addr >> index_size;
 
    UpAccessStats(access_type);
+
+   //Create the cache line to be inserted
+   c_line = (Pcache_line)malloc(sizeof(cache_line));
+   c_line->tag = tag;
+   c_line->dirty = FALSE;
+   c_line->LRU_next = (Pcache_line)NULL;
+   c_line->LRU_prev = (Pcache_line)NULL;
+
    if(c2.LRU_head[index] == NULL) //Miss with no Replacement
    {
       UpMissStats(access_type);
       cache_stat_data.demand_fetches += cache_block_size/WORD_SIZE; //Memory Fetch
-      c2.LRU_head[index] = (Pcache_line)malloc(sizeof(cache_line));
-      c2.LRU_head[index]->tag = tag;
-      c2.LRU_head[index]->dirty = FALSE;
-      c2.LRU_head[index]->LRU_next = (Pcache_line)NULL;
-      c2.LRU_head[index]->LRU_prev = (Pcache_line)NULL;
+      c2.LRU_head[index] = c_line;
+      c2.LRU_tail[index] = c_line; //When only one element is present both head and tail point to it
       c2.set_contents[index] = 1;
-      c2.LRU_tail[index] = c2.LRU_head[index]; //When only one element is present both head and tail point to it
    }
    else if(!search(c2.LRU_head[index], tag)) //Miss with Replacement
    {
@@ -188,23 +193,17 @@ if(cache_split && access_type == INSTRUCTION_LOAD_REFERENCE) //Only Loads
   
       if(c2.set_contents[index] < c2.associativity)
       {
-        c_line = (Pcache_line)malloc(sizeof(cache_line));
-        c_line->tag = tag;
-        c_line->dirty = FALSE;
-        //insert(&c2.LRU_head[index], &c2.LRU_tail[index], c_line);
+        //Inserting the cache line
+        insert(&c2.LRU_head[index], &c2.LRU_tail[index], c_line);
         c2.set_contents[index]++; 
       }
       else
       {
-         //insert(&c2.LRU_head[index], &c2.LRU_tail[index], c_line);
-         //delete(&c2.LRU_head[index], &c2.LRU_tail[index], c2.LRU_tail[index]);
+         delete(&c2.LRU_head[index], &c2.LRU_tail[index], c2.LRU_tail[index]);
+         insert(&c2.LRU_head[index], &c2.LRU_tail[index], c_line);
          //While evicting
          cache_stat_inst.replacements++;
       }
-
-      //Settting the new tag
-      c2.LRU_head[index]->tag = tag;
-      c2.LRU_head[index]->dirty = FALSE;
    }
    //Else do nothing on a write hit
 }
@@ -299,6 +298,9 @@ void delete(Pcache_line *head, Pcache_line *tail, Pcache_line item)
 /* inserts at the head of the list */
 void insert(Pcache_line *head, Pcache_line *tail, Pcache_line item)
 {
+  if(head == NULL) {printf("error : Memory not allocated for head while in insert\n"); exit(-1);}
+  if(tail == NULL) {printf("error : Memory not allocated for tail while in insert\n"); exit(-1);}
+
   item->LRU_next = *head;
   item->LRU_prev = (Pcache_line)NULL;
 
@@ -355,7 +357,7 @@ void print_stats()
 	 cache_stat_data.demand_fetches);
   printf("  copies back:   %d\n", cache_stat_inst.copies_back +
 	 cache_stat_data.copies_back);
-  printf(" Store instructions = %d\n", cache_stat_data.write_backs);
+  //printf(" Store instructions = %d\n", cache_stat_data.write_backs);
 }
 /************************************************************/
 
@@ -427,11 +429,17 @@ int search(Pcache_line c, unsigned tag)
    }
    else
    {
-     do
-     {
-        if(c->tag == tag)
-           return TRUE; 
-     } while(c->LRU_next != NULL);
-     return FALSE;
+      if(c->tag == tag)
+         return TRUE;
+      else
+      { 
+         while(c->LRU_next != NULL)
+         {
+            if(c->tag == tag)
+               return TRUE;
+            c = c->LRU_next;
+         }
+      }
+      return FALSE;
    }
 }
