@@ -163,7 +163,7 @@ void perform_access(unsigned addr, unsigned access_type)
 int index_size;
 unsigned int index, tag;
 Pcache_line c_line, hitAt;
-if(cache_split && access_type == INSTRUCTION_LOAD_REFERENCE) //Only Loads
+if(cache_split && access_type == INSTRUCTION_LOAD_REFERENCE) //Instruction Loads
 {
    index_size = LOG2(c2.n_sets) + c2.index_mask_offset;
    index = (addr & c2.index_mask) >> c2.index_mask_offset;
@@ -178,8 +178,7 @@ if(cache_split && access_type == INSTRUCTION_LOAD_REFERENCE) //Only Loads
    {
       UpMissStats(access_type);
       cache_stat_data.demand_fetches += cache_block_size/WORD_SIZE; //Memory Fetch
-      c2.LRU_head[index] = c_line;
-      c2.LRU_tail[index] = c_line; //When only one element is present both head and tail point to it
+      insert(&c2.LRU_head[index], &c2.LRU_tail[index], c_line);
       c2.set_contents[index] = 1;
    }
    else if(!search(c2.LRU_head[index], tag, &hitAt)) //Miss with Replacement
@@ -216,16 +215,16 @@ else
   if(c1.LRU_head[index] == NULL) //Miss with no Replacement
   {
      UpMissStats(access_type);
-     cache_stat_data.demand_fetches += cache_block_size/WORD_SIZE; //Memory fetch
      if(access_type == DATA_LOAD_REFERENCE || access_type == INSTRUCTION_LOAD_REFERENCE || cache_writealloc)
      {
+        cache_stat_data.demand_fetches += cache_block_size/WORD_SIZE; //Memory fetch
         c_line = allocateCL(tag);
-        c1.LRU_head[index] = c_line;
-        c1.LRU_tail[index] = c_line;
+        insert(&c1.LRU_head[index], &c1.LRU_tail[index], c_line);
         if(access_type == DATA_STORE_REFERENCE && cache_writeback)
            c1.LRU_head[index]->dirty = TRUE;
         c1.set_contents[index] = 1;
      }
+     //else write no allocate cache and DATA_STORE REFERENCE
   }
   else if(!search(c1.LRU_head[index], tag, &hitAt)) //Miss with Replacement
   {
@@ -256,6 +255,7 @@ else
            insert(&c1.LRU_head[index], &c1.LRU_tail[index], c_line);
         }
      }
+     //else write no allocate cache and DATA_STORE REFERENCE
   }
   else //Hit
   {
