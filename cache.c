@@ -251,9 +251,8 @@ else
      {
         cache_stat_data.demand_fetches += cache_block_size/WORD_SIZE; //Memory fetch
         c_line = allocateCL(tag);
+        setifDirty(access_type, c_line);
         insert(&c1.LRU_head[index], &c1.LRU_tail[index], c_line);
-        if(access_type == DATA_STORE_REFERENCE && cache_writeback)
-           c1.LRU_head[index]->dirty = TRUE;
         c1.set_contents[index]++;
      }
      //else write no allocate cache and DATA_STORE REFERENCE
@@ -268,8 +267,7 @@ else
 
         //Creating the cache_line to be inserted
         c_line = allocateCL(tag);
-        if(access_type == DATA_STORE_REFERENCE && cache_writeback)
-           c_line->dirty = TRUE;
+        setifDirty(access_type, c_line);
 
         if(c1.set_contents[index] < c1.associativity)
         {
@@ -295,8 +293,7 @@ else
      //LRU Implementation on a hit
      delete(&c1.LRU_head[index], &c1.LRU_tail[index], hitAt);
      insert(&c1.LRU_head[index], &c1.LRU_tail[index], hitAt);
-     if(access_type == DATA_STORE_REFERENCE && cache_writeback)
-        hitAt->dirty = TRUE; 
+     setifDirty(access_type, hitAt);
   }
 }
 }
@@ -576,4 +573,17 @@ void PrintICache()
       }
    }
    fprintf(cacheLog, "*********************************************************************\n");
+}
+
+
+
+void setifDirty(unsigned access_type, Pcache_line c_line)
+{
+if(access_type == DATA_STORE_REFERENCE)
+{
+   if(cache_writeback)
+      c_line->dirty = TRUE;
+   else
+      cache_stat_data.copies_back++; //Only a single word is copied back in write through
+}
 }
