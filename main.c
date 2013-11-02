@@ -46,6 +46,7 @@ void parse_args(int argc, char **argv)
       printf("\t-wt: \t\tset write policy to write through\n");
       printf("\t-wa: \t\tset allocation policy to write allocate\n");
       printf("\t-nw: \t\tset allocation policy to no write allocate\n");
+      printf("\t-dg: \t\tEnable printing of debug messages\n");
       exit(0);
     }
     
@@ -111,6 +112,12 @@ void parse_args(int argc, char **argv)
       set_cache_param(CACHE_PARAM_NOWRITEALLOC, value);
       arg_index += 1;
       continue;
+    }
+
+    if(!strcmp(argv[arg_index], "-dg")) {
+       set_cache_param(PARAM_DEBUG, value);
+       arg_index += 1;
+       continue;
     }
 
     printf("error:  unrecognized flag %s\n", argv[arg_index]);

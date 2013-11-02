@@ -23,6 +23,7 @@ static int words_per_block = DEFAULT_CACHE_BLOCK_SIZE / WORD_SIZE;
 static int cache_assoc = DEFAULT_CACHE_ASSOC;
 static int cache_writeback = DEFAULT_CACHE_WRITEBACK;
 static int cache_writealloc = DEFAULT_CACHE_WRITEALLOC;
+static int debug = DEFAULT_DEBUG;
 
 /* cache model data structures */
 static Pcache icache;
@@ -31,6 +32,9 @@ static cache c1;
 static cache c2;
 static cache_stat cache_stat_inst;
 static cache_stat cache_stat_data;
+
+//
+static FILE *cacheLog;
 
 /************************************************************/
 void set_cache_param(param, value)
@@ -69,6 +73,9 @@ void set_cache_param(param, value)
     break;
   case CACHE_PARAM_NOWRITEALLOC:
     cache_writealloc = FALSE;
+    break;
+   case PARAM_DEBUG:
+    debug = TRUE;
     break;
   default:
     printf("error set_cache_param: bad parameter value\n");
@@ -160,6 +167,12 @@ void init_cache()
      c2.LRU_head[i] = (Pcache_line)NULL;
      c2.LRU_tail[i] = (Pcache_line)NULL;
   }
+
+  if(debug)
+  {
+     cacheLog = fopen("cache.log", "w");
+     if(cacheLog == NULL) {printf("error : Unable to create cache.log file\n"); exit(-1);}
+  }
 }
 /************************************************************/
 
@@ -177,7 +190,7 @@ if(cache_split && access_type == INSTRUCTION_LOAD_REFERENCE) //Instruction Loads
    index = (addr & c2.index_mask) >> c2.index_mask_offset;
    tag = addr >> mask_size;
 
-   if(DEBUG) printf("addr = %x, index = %d, tag = %x -- ", addr, index, tag);
+   if(debug) fprintf(cacheLog, "addr = %x, index = %d, tag = %x -- ", addr, index, tag);
 
    UpAccessStats(access_type);
 
@@ -212,13 +225,14 @@ if(cache_split && access_type == INSTRUCTION_LOAD_REFERENCE) //Instruction Loads
    }
    else //On a hit
    {
-      if(DEBUG) printf("Is a hit\n");
+      if(debug) fprintf(cacheLog, "Is a hit\n");
 
       //LRU Implementation on a hit
       delete(&c2.LRU_head[index], &c2.LRU_tail[index], hitAt);
       insert(&c2.LRU_head[index], &c2.LRU_tail[index], hitAt);
    }
-   if(DEBUG) printCL(c2.LRU_head[index]);
+   //if(debug) printCL(c2.LRU_head[index]);
+   if(debug) PrintICache();
 }
 else
 {
@@ -226,7 +240,7 @@ else
   index = (addr & c1.index_mask) >> c1.index_mask_offset;
   tag = addr >> mask_size;
 
-  if(DEBUG) printf("debug_info : For addr = %d, tag = %d, index = %d\n", addr, tag, index);
+  //if(debug) fprintf(cacheLog, "debug_info : For addr = %d, tag = %d, index = %d\n", addr, tag, index);
 
   UpAccessStats(access_type);
 
@@ -402,7 +416,7 @@ void print_stats()
 
 void UpMissStats(unsigned access_type)
 {
-if(DEBUG) printf("Is a miss\n");
+if(debug) fprintf(cacheLog, "Is a miss\n");
 switch(access_type)
 {
    case DATA_LOAD_REFERENCE:
@@ -542,9 +556,24 @@ void printCL(Pcache_line c_line)
 Pcache_line n_line;
 while(c_line)
 {
-   printf("|%x|", c_line->tag);
+   fprintf(cacheLog, "|%x|", c_line->tag);
    n_line = c_line->LRU_next;
    c_line = n_line;
 }
-printf("\n");
+fprintf(cacheLog, "\n");
+}
+
+void PrintICache()
+{
+   int i;
+   fprintf(cacheLog, "*********************************************************************\n");
+   for(i = 0; i < c2.n_sets; i++)
+   {
+      if(c2.LRU_head[i] != NULL)
+      {
+         fprintf(cacheLog, "Line %d : ", i);
+         printCL(c2.LRU_head[i]);
+      }
+   }
+   fprintf(cacheLog, "*********************************************************************\n");
 }

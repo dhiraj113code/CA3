@@ -28,13 +28,13 @@
 #define CACHE_PARAM_WRITETHROUGH 6
 #define CACHE_PARAM_WRITEALLOC 7
 #define CACHE_PARAM_NOWRITEALLOC 8
+#define PARAM_DEBUG 9
 
 #define DATA_LOAD_REFERENCE 0
 #define DATA_STORE_REFERENCE 1
 #define INSTRUCTION_LOAD_REFERENCE 2
 
-#define DEBUG FALSE
-
+#define DEFAULT_DEBUG FALSE
 
 /* structure definitions */
 typedef struct cache_line_ {
@@ -87,3 +87,4 @@ int search(Pcache_line c, unsigned tag, Pcache_line *hitAt);
 Pcache_line allocateCL(unsigned tag);
 int search2(Pcache_line head, Pcache_line tail, unsigned tag, Pcache_line *hitAt);
 void printCL(Pcache_line c_line);
+void PrintICache();
