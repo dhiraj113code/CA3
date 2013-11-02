@@ -15,4 +15,4 @@
 void parse_args(int, char **);
 void play_trace(FILE *);
 int read_trace_element(FILE *, unsigned *, unsigned *);
-
+void desired_output();

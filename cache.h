@@ -89,3 +89,4 @@ int search2(Pcache_line head, Pcache_line tail, unsigned tag, Pcache_line *hitAt
 void printCL(Pcache_line c_line);
 void PrintICache();
 void setifDirty(unsigned access_type, Pcache_line c_line);
+void dump_input();

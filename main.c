@@ -20,6 +20,7 @@ int main(int argc, char **argv)
   init_cache();
   play_trace(traceFile);
   //print_stats();
+  desired_output();
 }
 
 
@@ -181,4 +182,12 @@ int read_trace_element(FILE *inFile, unsigned *access_type, unsigned *addr)
   else
     return(0);
 }
+
+void desired_output()
+{
+   dump_input();
+   dump_output();
+   printf("\n");
+}
+
 /************************************************************/

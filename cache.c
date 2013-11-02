@@ -596,3 +596,16 @@ if(access_type == DATA_STORE_REFERENCE)
       cache_stat_data.copies_back++; //Only a single word is copied back in write through
 }
 }
+
+void dump_input()
+{
+   printf("%d\t%d\t%d\t", cache_isize, cache_dsize, cache_block_size, cache_assoc);
+}
+
+void dump_output()
+{
+  printf("%d\t%d\t", cache_stat_inst.misses, cache_stat_inst.replacements);
+  printf("%d\t%d\t", cache_stat_data.misses, cache_stat_data.replacements);
+  printf("%d\t", cache_stat_inst.demand_fetches + cache_stat_data.demand_fetches);
+  printf("%d\t", cache_stat_inst.copies_back + cache_stat_data.copies_back);   
+} 

@@ -1,0 +1,20 @@
+./sim -is 8192 -ds 8192 -bs 16 ./traces/spice.trace
+./sim -is 16384 -ds 16384 -bs 16 ./traces/spice.trace
+./sim -is 32768 -ds 32768 -bs 16 ./traces/spice.trace
+./sim -is 65536 -ds 65536 -bs 16 ./traces/spice.trace
+./sim -is 32768 -ds 32768 -bs 128 ./traces/spice.trace
+./sim -is 8192 -ds 8192 -bs 64 -a 2 ./traces/spice.trace
+./sim -is 8192 -ds 8192 -bs 64 -a 4 ./traces/spice.trace
+./sim -is 8192 -ds 8192 -bs 64 -a 8 ./traces/spice.trace
+./sim -is 8192 -ds 8192 -bs 64 -a 16 ./traces/spice.trace
+./sim -is 8192 -ds 8192 -bs 64 -a 128 ./traces/spice.trace
+./sim -is 1024 -ds 1024 -bs 64 -a 2 ./traces/spice.trace
+./sim -is 1024 -ds 1024 -bs 64 -a 8 ./traces/spice.trace
+./sim -is 1024 -ds 1024 -bs 64 -a 16 ./traces/spice.trace
+./sim -is 8192 -ds 8192 -bs 16 -wt ./traces/spice.trace
+./sim -is 8192 -ds 8192 -bs 32 -wt ./traces/spice.trace
+./sim -is 8192 -ds 8192 -bs 64 -a 2 -wt ./traces/spice.trace
+./sim -is 8192 -ds 8192 -bs 16 -nw ./traces/spice.trace
+./sim -is 8192 -ds 8192 -bs 32 -nw ./traces/spice.trace
+./sim -is 8192 -ds 8192 -bs 64 -a 2 -nw ./traces/spice.trace
+
