@@ -255,7 +255,10 @@ else
         insert(&c1.LRU_head[index], &c1.LRU_tail[index], c_line);
         c1.set_contents[index]++;
      }
-     //else write no allocate cache and DATA_STORE REFERENCE
+     else //write no allocate cache and DATA_STORE REFERENCE
+     {
+        cache_stat_data.copies_back++; //Only a single word is copied back
+     }
   }
   else if(!search(c1.LRU_head[index], tag, &hitAt)) //Miss with Replacement
   //else if(!search2(c1.LRU_head[index], c1.LRU_tail[index], tag, &hitAt))
@@ -286,7 +289,10 @@ else
            insert(&c1.LRU_head[index], &c1.LRU_tail[index], c_line);
         }
      }
-     //else write no allocate cache and DATA_STORE REFERENCE
+     else //write no allocate cache and DATA_STORE REFERENCE
+     {
+        cache_stat_data.copies_back++; //Only a single word is copied back
+     }
   }
   else //Hit
   {
