@@ -103,9 +103,9 @@ void init_cache()
      c1.associativity = cache_assoc;
      c1_n_blocks = cache_usize/cache_block_size;
      c1.n_sets = c1_n_blocks/c1.associativity;
-     mask_size = LOG2(c1_n_blocks) + block_offset;
+     mask_size = LOG2(c1.n_sets) + block_offset;
      c1.index_mask = (1<<mask_size) - 1;
-     c1.index_mask_offset = block_offset + LOG2(c1.associativity);
+     c1.index_mask_offset = block_offset;
   }
   else
   {
@@ -114,18 +114,18 @@ void init_cache()
      c1.associativity = cache_assoc;
      c1_n_blocks = cache_dsize/cache_block_size;
      c1.n_sets = c1_n_blocks/c1.associativity;
-     mask_size = LOG2(c1_n_blocks) + block_offset;
+     mask_size = LOG2(c1.n_sets) + block_offset;
      c1.index_mask = (1<<mask_size) - 1;
-     c1.index_mask_offset = block_offset + LOG2(c1.associativity);
+     c1.index_mask_offset = block_offset;
 
      //Instruction Cache
      c2.size = cache_isize;
      c2.associativity = cache_assoc;
      c2_n_blocks = cache_isize/cache_block_size;
      c2.n_sets = c2_n_blocks/c2.associativity;
-     mask_size = LOG2(c2_n_blocks) + block_offset;
+     mask_size = LOG2(c2.n_sets) + block_offset;
      c2.index_mask = (1<<mask_size) - 1;
-     c2.index_mask_offset = block_offset + LOG2(c2.associativity);
+     c2.index_mask_offset = block_offset;
   }
 
   //Printing Initialized output
