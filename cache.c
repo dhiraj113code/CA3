@@ -599,7 +599,7 @@ if(access_type == DATA_STORE_REFERENCE)
 
 void dump_input()
 {
-   printf("%d\t%d\t%d\t", cache_isize, cache_dsize, cache_block_size, cache_assoc);
+   printf("%d\t%d\t%d\t%d\t", cache_isize, cache_dsize, cache_block_size, cache_assoc);
 }
 
 void dump_output()

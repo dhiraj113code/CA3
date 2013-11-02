@@ -1,0 +1,10 @@
+./sim -is 8192 -ds 8192 -bs 4 -a 2 ./traces/spice.trace
+./sim -is 8192 -ds 8192 -bs 8 -a 2 ./traces/spice.trace
+./sim -is 8192 -ds 8192 -bs 16 -a 2 ./traces/spice.trace
+./sim -is 8192 -ds 8192 -bs 32 -a 2 ./traces/spice.trace
+./sim -is 8192 -ds 8192 -bs 64 -a 2 ./traces/spice.trace
+./sim -is 8192 -ds 8192 -bs 128 -a 2 ./traces/spice.trace
+./sim -is 8192 -ds 8192 -bs 256 -a 2 ./traces/spice.trace
+./sim -is 8192 -ds 8192 -bs 512 -a 2 ./traces/spice.trace
+./sim -is 8192 -ds 8192 -bs 1024 -a 2 ./traces/spice.trace
+./sim -is 8192 -ds 8192 -bs 2048 -a 2 ./traces/spice.trace

@@ -1,0 +1,16 @@
+./sim -is 8192 -ds 8192 -bs 64 -a 2 ./traces/tex.trace
+./sim -is 8192 -ds 8192 -bs 64 -a -nw 2 ./traces/tex.trace
+./sim -is 8192 -ds 8192 -bs 64 -a 4 ./traces/tex.trace
+./sim -is 8192 -ds 8192 -bs 64 -a -nw 4 ./traces/tex.trace
+./sim -is 8192 -ds 8192 -bs 128 -a 2 ./traces/tex.trace
+./sim -is 8192 -ds 8192 -bs 128 -a -nw 2 ./traces/tex.trace
+./sim -is 8192 -ds 8192 -bs 128 -a 4 ./traces/tex.trace
+./sim -is 8192 -ds 8192 -bs 128 -a -nw 4 ./traces/tex.trace
+./sim -is 16384 -ds 16384 -bs 64 -a 2 ./traces/tex.trace
+./sim -is 16384 -ds 16384 -bs 64 -a -nw 2 ./traces/tex.trace
+./sim -is 16384 -ds 16384 -bs 64 -a 4 ./traces/tex.trace
+./sim -is 16384 -ds 16384 -bs 64 -a -nw 4 ./traces/tex.trace
+./sim -is 16384 -ds 16384 -bs 128 -a 2 ./traces/tex.trace
+./sim -is 16384 -ds 16384 -bs 128 -a -nw 2 ./traces/tex.trace
+./sim -is 16384 -ds 16384 -bs 128 -a 4 ./traces/tex.trace
+./sim -is 16384 -ds 16384 -bs 128 -a -nw 4 ./traces/tex.trace

@@ -1,0 +1,8 @@
+./sim -is 8192 -ds 8192 -bs 128 -a 1 ./traces/cc.trace
+./sim -is 8192 -ds 8192 -bs 128 -a 2 ./traces/cc.trace
+./sim -is 8192 -ds 8192 -bs 128 -a 4 ./traces/cc.trace
+./sim -is 8192 -ds 8192 -bs 128 -a 8 ./traces/cc.trace
+./sim -is 8192 -ds 8192 -bs 128 -a 16 ./traces/cc.trace
+./sim -is 8192 -ds 8192 -bs 128 -a 32 ./traces/cc.trace
+./sim -is 8192 -ds 8192 -bs 128 -a 64 ./traces/cc.trace
+
