@@ -1,4 +1,6 @@
 *.trace
 *.o
+*.log
+*.swp
 sim
 tags

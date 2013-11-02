@@ -86,3 +86,4 @@ void UpReplaceStats(unsigned access_type);
 int search(Pcache_line c, unsigned tag, Pcache_line *hitAt);
 Pcache_line allocateCL(unsigned tag);
 int search2(Pcache_line head, Pcache_line tail, unsigned tag, Pcache_line *hitAt);
+void printCL(Pcache_line c_line);
