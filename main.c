@@ -19,7 +19,7 @@ int main(int argc, char **argv)
   parse_args(argc, argv);
   init_cache();
   play_trace(traceFile);
-  print_stats();
+  //print_stats();
 }
 
 
@@ -125,7 +125,7 @@ void parse_args(int argc, char **argv)
 
   }
 
-  dump_settings();
+  //dump_settings();
 
   /* open the trace file */
   traceFile = fopen(argv[arg_index], "r");
@@ -156,8 +156,8 @@ void play_trace(FILE *inFile)
     }
 
     num_inst++;
-    if (!(num_inst % PRINT_INTERVAL))
-      printf("processed %d references\n", num_inst);
+    /*if (!(num_inst % PRINT_INTERVAL))
+      printf("processed %d references\n", num_inst);*/
   }
 
   flush();

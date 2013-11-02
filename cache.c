@@ -129,11 +129,14 @@ void init_cache()
   }
 
   //Printing Initialized output
-  printf("-----------------------------------------------\n");
-  printf("Cache 1:\nnumber of blocks = %d\nnumber of sets = %d\nmask_size = %d\nMask = %d\nMask_offset = %d\n", c1_n_blocks, c1.n_sets, mask_size, c1.index_mask, c1.index_mask_offset);
-  if(cache_split)
-  printf("Cache 2:\nnumber of blocks = %d\nnumber of sets = %d\nmask_size = %d\nMask = %d\nMask_offset = %d\n", c2_n_blocks, c2.n_sets, mask_size, c2.index_mask, c2.index_mask_offset);
-  printf("-----------------------------------------------\n");
+  if(debug)
+  {
+     printf("-----------------------------------------------\n");
+     printf("Cache 1:\nnumber of blocks = %d\nnumber of sets = %d\nmask_size = %d\nMask = %d\nMask_offset = %d\n", c1_n_blocks, c1.n_sets, mask_size, c1.index_mask, c1.index_mask_offset);
+     if(cache_split)
+        printf("Cache 2:\nnumber of blocks = %d\nnumber of sets = %d\nmask_size = %d\nMask = %d\nMask_offset = %d\n", c2_n_blocks, c2.n_sets, mask_size, c2.index_mask, c2.index_mask_offset);
+     printf("-----------------------------------------------\n");
+  }
 
   //Dynamically allocating memory for LRU head, LRU tail and contents arrays
   c1.LRU_head = (Pcache_line*)malloc(sizeof(Pcache_line)*c1.n_sets);
