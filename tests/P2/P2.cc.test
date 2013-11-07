@@ -8,3 +8,4 @@
 ./sim -is 8192 -ds 8192 -bs 512 -a 2 ./traces/cc.trace
 ./sim -is 8192 -ds 8192 -bs 1024 -a 2 ./traces/cc.trace
 ./sim -is 8192 -ds 8192 -bs 2048 -a 2 ./traces/cc.trace
+./sim -is 8192 -ds 8192 -bs 4096 -a 2 ./traces/cc.trace
