@@ -608,6 +608,7 @@ void dump_output()
   printf("%d\t%d\t", cache_stat_data.misses, cache_stat_data.replacements);
   printf("%d\t", cache_stat_inst.demand_fetches + cache_stat_data.demand_fetches);
   printf("%d\t", cache_stat_inst.copies_back + cache_stat_data.copies_back);
-  printf("%d\t", cache_stat_inst.accesses);
-  printf("%d\t", cache_stat_data.accesses);  
+  //printf("%d\t", cache_stat_inst.demand_fetches + cache_stat_data.demand_fetches + cache_stat_inst.copies_back + cache_stat_data.copies_back);
+  //printf("%d\t", cache_stat_inst.accesses);
+  //printf("%d\t", cache_stat_data.accesses);  
 } 
