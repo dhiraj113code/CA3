@@ -25,4 +25,4 @@ for fname in Files:
       for block_size in block_size_arr:
          for associativity in associativity_arr:
             print './sim -is {} -ds {} -bs {} -a {} {}{}'.format( cache_size, cache_size, block_size, associativity, trace_dir, fname);
-            print './sim -is {} -ds {} -bs {} -a -nw {} {}{}'.format( cache_size, cache_size, block_size, associativity, trace_dir, fname);
+            print './sim -is {} -ds {} -bs {} -a {} -nw {}{}'.format( cache_size, cache_size, block_size, associativity, trace_dir, fname);
